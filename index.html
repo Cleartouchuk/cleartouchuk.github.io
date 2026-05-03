@@ -865,8 +865,13 @@ function selectProduct(sku,listId){
     document.getElementById('q-search').value=`${p.sku} — ${p.name}`;
     document.getElementById('q-desc').value=p.name;
     document.getElementById('q-unit-price').value=p.rrp;
-  }else{
-    document.getElementById('e-screen').value=`${p.sku} — ${p.name}`
+  } else if(listId==='e-screen-list'){
+    document.getElementById('e-screen').value=`${p.sku} — ${p.name}`;
+  } else {
+    // Survey site screen type — listId is 'sl-0', 'sl-1' etc
+    const idx=listId.replace('sl-','');
+    const inp=document.getElementById(`s${idx}-type`);
+    if(inp)inp.value=`${p.sku} — ${p.name}`;
   }
 }
 function clearQuoteProduct(){selectedProduct=null;document.getElementById('q-search').value='';document.getElementById('q-desc').value='';document.getElementById('q-unit-price').value='';document.getElementById('q-qty').value=1}
@@ -913,13 +918,13 @@ async function saveDiaryEntry(){
 
 // ENQUIRY
 async function lookupPostcode(){
-  const pc=gv('e-postcode').trim().replace(/\s/g,'');if(!pc){showToast('Enter a postcode');return}
+  const pc=gv('e-postcode').trim();if(!pc){showToast('Enter a postcode');return}
   try{
-    const r=await fetch(`https://api.postcodes.io/postcodes/${pc}`);const d=await r.json();
-    if(d.status===200&&d.result){
-      const res=d.result;
-      const parts=[res.thoroughfare,res.post_town,res.admin_district,pc.toUpperCase()].filter(Boolean);
-      document.getElementById('e-address').value=parts.join(', ');
+    const r=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(pc)}&region=uk&key=AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY`);
+    const d=await r.json();
+    if(d.status==='OK'&&d.results.length>0){
+      const addr=d.results[0].formatted_address;
+      document.getElementById('e-address').value=addr;
       showToast('Address found ✓','success')
     }else showToast('Postcode not found')
   }catch(e){showToast('Lookup failed')}
