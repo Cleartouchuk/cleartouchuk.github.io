@@ -1,0 +1,1923 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CT Field">
+<title>Clear Touch UK — Field App</title>
+<link rel="manifest" href="manifest.json">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --black: #0a0a0a;
+    --white: #f5f5f0;
+    --gold: #A87D00;
+    --gold-light: #c9970a;
+    --grey: #1a1a1a;
+    --grey-mid: #2a2a2a;
+    --grey-light: #3a3a3a;
+    --text-dim: #888;
+    --text-mid: #bbb;
+    --success: #2d6a4f;
+    --warning: #b5451b;
+    --radius: 8px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--black);
+    color: var(--white);
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    overflow-x: hidden;
+  }
+
+  /* AUTH SCREEN */
+  #auth-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 40px 24px;
+    background: var(--black);
+  }
+
+  .auth-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.3em;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .auth-title {
+    font-size: 28px;
+    font-weight: 300;
+    color: var(--white);
+    margin-bottom: 4px;
+    letter-spacing: -0.5px;
+  }
+
+  .auth-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    margin-bottom: 48px;
+  }
+
+  .auth-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--gold);
+    color: var(--black);
+    padding: 16px 28px;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .auth-btn:hover { background: var(--gold-light); }
+  .auth-btn svg { width: 20px; height: 20px; }
+
+  /* MAIN APP */
+  #app { display: none; flex-direction: column; min-height: 100vh; }
+
+  /* HEADER */
+  .app-header {
+    background: var(--grey);
+    border-bottom: 1px solid var(--grey-light);
+    padding: calc(var(--safe-top) + 12px) 20px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-logo {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.25em;
+    color: var(--gold);
+    text-transform: uppercase;
+  }
+
+  .header-title {
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .header-user {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* NAV */
+  .app-nav {
+    display: flex;
+    background: var(--grey);
+    border-bottom: 1px solid var(--grey-light);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .app-nav::-webkit-scrollbar { display: none; }
+
+  .nav-tab {
+    flex-shrink: 0;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-dim);
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .nav-tab.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  /* CONTENT */
+  .app-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    padding-bottom: calc(var(--safe-bottom) + 20px);
+  }
+
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--grey);
+    border: 1px solid var(--grey-light);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .badge {
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .badge-new { background: #1a3a2a; color: #4ade80; }
+  .badge-quoted { background: #2a2a1a; color: #facc15; }
+  .badge-accepted { background: #1a2a3a; color: #60a5fa; }
+  .badge-complete { background: #1a2a1a; color: #86efac; }
+  .badge-survey { background: #2a1a2a; color: #c084fc; }
+
+  /* FORM FIELDS */
+  .field-group {
+    margin-bottom: 16px;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .field-input, .field-select, .field-textarea {
+    width: 100%;
+    background: var(--grey-mid);
+    border: 1px solid var(--grey-light);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    color: var(--white);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+  }
+
+  .field-input:focus, .field-select:focus, .field-textarea:focus {
+    border-color: var(--gold);
+  }
+
+  .field-select option { background: var(--grey-mid); }
+
+  .field-textarea { min-height: 80px; resize: vertical; }
+
+  .field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* TOGGLE */
+  .toggle-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .toggle-btn {
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    border: 1px solid var(--grey-light);
+    background: var(--grey-mid);
+    color: var(--text-mid);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .toggle-btn.selected {
+    border-color: var(--gold);
+    background: rgba(168, 125, 0, 0.15);
+    color: var(--gold);
+  }
+
+  /* CHECKBOX ROW */
+  .check-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--grey-light);
+  }
+
+  .check-row:last-child { border-bottom: none; }
+
+  .check-label { font-size: 14px; color: var(--white); }
+  .check-sub { font-size: 12px; color: var(--text-dim); margin-top: 2px; }
+
+  .check-toggle {
+    width: 44px;
+    height: 26px;
+    background: var(--grey-light);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+    border: none;
+  }
+
+  .check-toggle.on { background: var(--gold); }
+
+  .check-toggle::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: transform 0.2s;
+  }
+
+  .check-toggle.on::after { transform: translateX(18px); }
+
+  /* BUTTONS */
+  .btn-primary {
+    width: 100%;
+    padding: 16px;
+    background: var(--gold);
+    color: var(--black);
+    border: none;
+    border-radius: var(--radius);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+  }
+
+  .btn-primary:hover { background: var(--gold-light); }
+  .btn-primary:disabled { background: var(--grey-light); color: var(--text-dim); cursor: not-allowed; }
+
+  .btn-secondary {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: var(--text-mid);
+    border: 1px solid var(--grey-light);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  .btn-danger {
+    width: 100%;
+    padding: 14px;
+    background: transparent;
+    color: #f87171;
+    border: 1px solid #f87171;
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    margin-top: 8px;
+  }
+
+  /* PHOTO UPLOAD */
+  .photo-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .photo-thumb {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    background: var(--grey-mid);
+  }
+
+  .photo-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .photo-thumb .del-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    background: rgba(0,0,0,0.7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    color: white;
+  }
+
+  .photo-add {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 2px dashed var(--grey-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-dim);
+    font-size: 11px;
+    gap: 4px;
+    background: var(--grey-mid);
+  }
+
+  .photo-add svg { width: 24px; height: 24px; }
+
+  /* JOB LIST ITEM */
+  .job-item {
+    background: var(--grey);
+    border: 1px solid var(--grey-light);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .job-item:hover { border-color: var(--gold); }
+
+  .job-ref {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .job-business {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 3px;
+  }
+
+  .job-address {
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  .job-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 10px;
+  }
+
+  /* SECTION HEADER */
+  .section-header {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin: 20px 0 10px;
+  }
+
+  .section-header:first-child { margin-top: 0; }
+
+  /* STATUS BAR */
+  .status-bar {
+    background: var(--grey-mid);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    font-size: 13px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .status-dot.offline { background: var(--warning); }
+  .status-dot.syncing { background: #60a5fa; animation: pulse 1s infinite; }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* TOAST */
+  #toast {
+    position: fixed;
+    bottom: calc(var(--safe-bottom) + 20px);
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--grey-mid);
+    border: 1px solid var(--grey-light);
+    color: var(--white);
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    z-index: 9999;
+    transition: transform 0.3s;
+    white-space: nowrap;
+    max-width: 90vw;
+  }
+
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.success { border-color: var(--gold); }
+  #toast.error { border-color: #f87171; }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-size: 13px;
+    gap: 10px;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--grey-light);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* DIARY */
+  .diary-entry {
+    background: var(--grey);
+    border: 1px solid var(--grey-light);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+
+  .diary-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    margin-bottom: 4px;
+  }
+
+  .diary-type {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+
+  .diary-job { font-size: 14px; font-weight: 500; }
+
+  /* DETAIL VIEW */
+  .detail-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gold);
+    font-size: 14px;
+    margin-bottom: 16px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .detail-title {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .detail-ref {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+
+  .info-row {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--grey-light);
+    gap: 12px;
+  }
+
+  .info-row:last-child { border-bottom: none; }
+
+  .info-key {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-family: 'DM Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    width: 110px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+
+  .info-val { font-size: 14px; flex: 1; }
+
+  /* OFFLINE QUEUE */
+  .offline-badge {
+    background: rgba(181, 69, 27, 0.2);
+    border: 1px solid var(--warning);
+    color: #fca5a5;
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    margin-bottom: 12px;
+    display: none;
+  }
+
+  .offline-badge.show { display: block; }
+
+  input[type="date"], input[type="time"] {
+    color-scheme: dark;
+  }
+</style>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-logo">Clear Touch UK</div>
+  <div class="auth-title">Field App</div>
+  <div class="auth-sub">Survey & Installation Manager</div>
+  <button class="auth-btn" onclick="signIn()">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+    Sign in with Google
+  </button>
+</div>
+
+<!-- MAIN APP -->
+<div id="app">
+  <div class="app-header">
+    <div class="header-logo">CT Field</div>
+    <div class="header-title" id="header-title">Dashboard</div>
+    <div class="header-user" id="header-user"></div>
+  </div>
+
+  <div class="app-nav">
+    <button class="nav-tab active" onclick="showScreen('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showScreen('jobs')">Jobs</button>
+    <button class="nav-tab" onclick="showScreen('survey')">Survey</button>
+    <button class="nav-tab" onclick="showScreen('install')">Install</button>
+    <button class="nav-tab" onclick="showScreen('diary')">Diary</button>
+    <button class="nav-tab" onclick="showScreen('enquiry')">+ Enquiry</button>
+  </div>
+
+  <div class="app-content">
+
+    <!-- DASHBOARD -->
+    <div id="screen-dashboard" class="screen active">
+      <div id="status-bar" class="status-bar">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="status-text">Checking connection...</span>
+      </div>
+      <div id="offline-badge" class="offline-badge">
+        ⚠ Offline — data will sync when connected
+      </div>
+
+      <div class="section-header">Active Jobs</div>
+      <div id="dashboard-jobs">
+        <div class="loading"><div class="spinner"></div> Loading jobs...</div>
+      </div>
+
+      <div class="section-header">Upcoming</div>
+      <div id="dashboard-diary">
+        <div class="loading"><div class="spinner"></div> Loading diary...</div>
+      </div>
+    </div>
+
+    <!-- JOBS -->
+    <div id="screen-jobs" class="screen">
+      <div class="section-header">All Jobs</div>
+      <div id="jobs-list">
+        <div class="loading"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+
+    <!-- SURVEY FORM -->
+    <div id="screen-survey" class="screen">
+      <div id="survey-list-view">
+        <div class="section-header">Select Job for Survey</div>
+        <div id="survey-job-list">
+          <div class="loading"><div class="spinner"></div> Loading jobs...</div>
+        </div>
+      </div>
+
+      <div id="survey-form-view" style="display:none;">
+        <button class="detail-back" onclick="showSurveyList()">← Back to Jobs</button>
+        <div class="detail-ref" id="survey-job-ref"></div>
+        <div class="detail-title" id="survey-job-name"></div>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:20px;" id="survey-job-address"></div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Site Contact</div>
+          <div class="field-group">
+            <label class="field-label">On-Site Contact Name</label>
+            <input class="field-input" id="s-contact" type="text" placeholder="Name">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Contact Mobile</label>
+            <input class="field-input" id="s-mobile" type="tel" placeholder="07...">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Screen Details</div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Screen Size</label>
+              <select class="field-select" id="s-size">
+                <option value="">Select</option>
+                <option>22"</option><option>32"</option><option>43"</option>
+                <option>49"</option><option>50"</option><option>55"</option>
+                <option>65"</option><option>75"</option><option>86"</option>
+              </select>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Qty</label>
+              <input class="field-input" id="s-qty" type="number" placeholder="1" min="1">
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Screen Type</label>
+            <input class="field-input" id="s-type" type="text" placeholder="e.g. Ultra High Brightness">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Orientation</label>
+            <div class="toggle-group">
+              <button class="toggle-btn" onclick="toggleSelect(this,'orientation')">Landscape</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'orientation')">Portrait</button>
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label">Double Sided?</label>
+            <div class="toggle-group">
+              <button class="toggle-btn" onclick="toggleSelect(this,'double-sided')">Yes</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'double-sided')">No</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Mounting</div>
+          <div class="field-group">
+            <label class="field-label">Mounting Type</label>
+            <div class="toggle-group">
+              <button class="toggle-btn" onclick="toggleSelect(this,'mount')">Wall</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'mount')">Ceiling</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'mount')">Floor Stand</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'mount')">Pole</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'mount')">Freestanding</button>
+            </div>
+          </div>
+          <div class="field-group" id="pole-config-group" style="display:none;">
+            <label class="field-label">Pole Configuration</label>
+            <div class="toggle-group">
+              <button class="toggle-btn" onclick="toggleSelect(this,'pole')">Single Pole</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'pole')">Double Pole</button>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Pole Length (m)</label>
+              <input class="field-input" id="s-pole-len" type="number" step="0.1" placeholder="1.5">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Floor to Ceiling (m)</label>
+              <input class="field-input" id="s-floor-ceil" type="number" step="0.1" placeholder="2.4">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Wall & Ceiling</div>
+          <div class="field-group">
+            <label class="field-label">Wall/Ceiling Material</label>
+            <div class="toggle-group">
+              <button class="toggle-btn" onclick="toggleSelect(this,'wall')">Plasterboard</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'wall')">Brick</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'wall')">Concrete</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'wall')">Timber</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'wall')">Glass</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'wall')">Other</button>
+            </div>
+          </div>
+          <div class="check-row">
+            <div>
+              <div class="check-label">Suspended Ceiling?</div>
+            </div>
+            <button class="check-toggle" id="toggle-susp" onclick="toggleSwitch('toggle-susp')"></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Power & Cabling</div>
+          <div class="check-row">
+            <div class="check-label">Socket Present?</div>
+            <button class="check-toggle on" id="toggle-socket" onclick="toggleSwitch('toggle-socket')"></button>
+          </div>
+          <div class="check-row">
+            <div class="check-label">Spur Needed?</div>
+            <button class="check-toggle" id="toggle-spur" onclick="toggleSwitch('toggle-spur')"></button>
+          </div>
+          <div class="check-row">
+            <div class="check-label">Electrician Needed?</div>
+            <button class="check-toggle" id="toggle-elec" onclick="toggleSwitch('toggle-elec')"></button>
+          </div>
+          <div class="check-row">
+            <div class="check-label">Extension Lead Required?</div>
+            <button class="check-toggle" id="toggle-ext" onclick="toggleSwitch('toggle-ext')"></button>
+          </div>
+          <div class="field-group" style="margin-top:12px;">
+            <label class="field-label">Cable Management</label>
+            <div class="toggle-group">
+              <button class="toggle-btn" onclick="toggleSelect(this,'cable')">Trunking</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'cable')">Conduit</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'cable')">Surface Run</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'cable')">Concealed</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'cable')">None</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Access & Parking</div>
+          <div class="field-group">
+            <label class="field-label">Parking Notes</label>
+            <input class="field-input" id="s-parking" type="text" placeholder="Free on street, bay nearby...">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Preferred Install Time</label>
+            <div class="toggle-group">
+              <button class="toggle-btn" onclick="toggleSelect(this,'install-time')">Before Hours</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'install-time')">During Hours</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'install-time')">After Hours</button>
+              <button class="toggle-btn" onclick="toggleSelect(this,'install-time')">Weekend</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Screen Location</div>
+          <div class="field-group">
+            <label class="field-label">Description</label>
+            <input class="field-input" id="s-location" type="text" placeholder="e.g. Front window facing High Street">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Survey Photos</div>
+          <div class="photo-grid" id="survey-photos"></div>
+          <label class="photo-add" style="display:flex;width:100%;aspect-ratio:unset;padding:16px;" for="survey-photo-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Add Survey Photos
+          </label>
+          <input type="file" id="survey-photo-input" accept="image/*" multiple capture="environment" style="display:none" onchange="addPhotos('survey',this)">
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Notes</div>
+          <textarea class="field-textarea" id="s-notes" placeholder="Any additional notes from site visit..."></textarea>
+        </div>
+
+        <button class="btn-primary" onclick="saveSurvey()">Save Survey to Tracker</button>
+        <button class="btn-secondary" onclick="showSurveyList()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- INSTALL FORM -->
+    <div id="screen-install" class="screen">
+      <div id="install-list-view">
+        <div class="section-header">Select Job for Install Checklist</div>
+        <div id="install-job-list">
+          <div class="loading"><div class="spinner"></div> Loading jobs...</div>
+        </div>
+      </div>
+
+      <div id="install-form-view" style="display:none;">
+        <button class="detail-back" onclick="showInstallList()">← Back to Jobs</button>
+        <div class="detail-ref" id="install-job-ref"></div>
+        <div class="detail-title" id="install-job-name"></div>
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:20px;" id="install-job-address"></div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Install Details</div>
+          <div class="field-row">
+            <div class="field-group">
+              <label class="field-label">Install Date</label>
+              <input class="field-input" id="i-date" type="date">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Install Time</label>
+              <input class="field-input" id="i-time" type="time">
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Pre-Install Checks</div>
+          <div class="check-row">
+            <div>
+              <div class="check-label">Delivery Confirmed</div>
+              <div class="check-sub">Screen arrived and checked</div>
+            </div>
+            <button class="check-toggle" id="i-delivery" onclick="toggleSwitch('i-delivery')"></button>
+          </div>
+          <div class="check-row">
+            <div>
+              <div class="check-label">Screen Checked OK</div>
+              <div class="check-sub">No damage, powers on</div>
+            </div>
+            <button class="check-toggle" id="i-screen-ok" onclick="toggleSwitch('i-screen-ok')"></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Serial Number</div>
+          <div class="field-group">
+            <label class="field-label">Serial Number</label>
+            <input class="field-input" id="i-serial" type="text" placeholder="From label on rear of screen">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Screen Location (final)</label>
+            <input class="field-input" id="i-location" type="text" placeholder="e.g. Front window, left side">
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Installation</div>
+          <div class="check-row">
+            <div>
+              <div class="check-label">Install Complete</div>
+              <div class="check-sub">Screen mounted and configured</div>
+            </div>
+            <button class="check-toggle" id="i-complete" onclick="toggleSwitch('i-complete')"></button>
+          </div>
+          <div class="check-row">
+            <div>
+              <div class="check-label">Customer Signed Off</div>
+              <div class="check-sub">Customer happy, handover done</div>
+            </div>
+            <button class="check-toggle" id="i-signoff" onclick="toggleSwitch('i-signoff')"></button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Installation Photos</div>
+          <div class="photo-grid" id="install-photos"></div>
+          <label class="photo-add" style="display:flex;width:100%;aspect-ratio:unset;padding:16px;" for="install-photo-input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            Add Installation Photos
+          </label>
+          <input type="file" id="install-photo-input" accept="image/*" multiple capture="environment" style="display:none" onchange="addPhotos('install',this)">
+        </div>
+
+        <div class="card">
+          <div class="card-title" style="margin-bottom:14px;">Notes on Day</div>
+          <textarea class="field-textarea" id="i-notes" placeholder="Any issues, changes or observations..."></textarea>
+        </div>
+
+        <button class="btn-primary" onclick="saveInstall()">Save Install Checklist</button>
+        <button class="btn-secondary" onclick="showInstallList()">Cancel</button>
+      </div>
+    </div>
+
+    <!-- DIARY -->
+    <div id="screen-diary" class="screen">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">Book a Date</div>
+        <div class="field-group">
+          <label class="field-label">Job</label>
+          <select class="field-select" id="diary-job"></select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Type</label>
+          <div class="toggle-group">
+            <button class="toggle-btn selected" onclick="toggleSelect(this,'diary-type')">Survey</button>
+            <button class="toggle-btn" onclick="toggleSelect(this,'diary-type')">Installation</button>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">Date</label>
+            <input class="field-input" id="diary-date" type="date">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Time</label>
+            <input class="field-input" id="diary-time" type="time" value="09:00">
+          </div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Notes</label>
+          <input class="field-input" id="diary-notes" type="text" placeholder="Optional notes">
+        </div>
+        <button class="btn-primary" onclick="saveDiaryEntry()">Save to Diary</button>
+      </div>
+
+      <div class="section-header">Scheduled</div>
+      <div id="diary-list">
+        <div class="loading"><div class="spinner"></div> Loading...</div>
+      </div>
+    </div>
+
+    <!-- NEW ENQUIRY -->
+    <div id="screen-enquiry" class="screen">
+      <div class="card">
+        <div class="card-title" style="margin-bottom:14px;">New Enquiry</div>
+
+        <div class="field-group">
+          <label class="field-label">How Received</label>
+          <div class="toggle-group">
+            <button class="toggle-btn selected" onclick="toggleSelect(this,'how')">Website</button>
+            <button class="toggle-btn" onclick="toggleSelect(this,'how')">Phone</button>
+            <button class="toggle-btn" onclick="toggleSelect(this,'how')">Email</button>
+            <button class="toggle-btn" onclick="toggleSelect(this,'how')">Referral</button>
+            <button class="toggle-btn" onclick="toggleSelect(this,'how')">Walk In</button>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Sector</label>
+          <select class="field-select" id="e-sector">
+            <option value="">Select sector</option>
+            <option>Retail</option><option>Healthcare</option><option>Education</option>
+            <option>Hospitality</option><option>Corporate</option><option>Leisure</option>
+            <option>Property</option><option>Food & Drink</option><option>Other</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">First Name</label>
+            <input class="field-input" id="e-fname" type="text" placeholder="First">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Last Name</label>
+            <input class="field-input" id="e-lname" type="text" placeholder="Last">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Business Name</label>
+          <input class="field-input" id="e-business" type="text" placeholder="Company Ltd">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Email</label>
+          <input class="field-input" id="e-email" type="email" placeholder="email@company.co.uk">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Phone</label>
+          <input class="field-input" id="e-phone" type="tel" placeholder="01234...">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Address / Postcode</label>
+          <input class="field-input" id="e-address" type="text" placeholder="Address or postcode">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Requirement</label>
+          <div class="toggle-group">
+            <button class="toggle-btn" onclick="toggleSelect(this,'req')">Supply Only</button>
+            <button class="toggle-btn selected" onclick="toggleSelect(this,'req')">Supply & Install</button>
+            <button class="toggle-btn" onclick="toggleSelect(this,'req')">Install Only</button>
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label class="field-label">No. of Sites</label>
+            <input class="field-input" id="e-sites" type="number" placeholder="1" min="1">
+          </div>
+          <div class="field-group">
+            <label class="field-label">Qty of Screens</label>
+            <input class="field-input" id="e-qty" type="number" placeholder="1" min="1">
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Screen Type / Size (if known)</label>
+          <input class="field-input" id="e-screen" type="text" placeholder="e.g. 55&quot; Window Display">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Message / Requirements</label>
+          <textarea class="field-textarea" id="e-message" placeholder="What they told you..."></textarea>
+        </div>
+
+        <button class="btn-primary" onclick="saveEnquiry()">Add to Enquiries</button>
+      </div>
+    </div>
+
+  </div><!-- end app-content -->
+</div><!-- end app -->
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// CONFIG — update these with your values
+// ============================================================
+const CONFIG = {
+  CLIENT_ID: '1071332276578-0bqhck37rush4tkhtdflbcv0lo06ifii.apps.googleusercontent.com',
+  SHEET_ID: '1YsxLf7KapvAnNFpnpQfmHObpXmTOOtDNJ2T4wUZS-XM',
+  SCOPES: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/calendar',
+  DRIVE_FOLDER_NAME: 'ClearTouchUK Jobs'
+};
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  user: null,
+  accessToken: null,
+  isOnline: navigator.onLine,
+  jobs: [],
+  enquiries: [],
+  diaryEntries: [],
+  surveyPhotos: [],
+  installPhotos: [],
+  currentJob: null,
+  selections: {},
+  offlineQueue: JSON.parse(localStorage.getItem('ct_offline_queue') || '[]'),
+  rootFolderId: null
+};
+
+// ============================================================
+// ONLINE / OFFLINE
+// ============================================================
+window.addEventListener('online', () => { state.isOnline = true; updateStatusBar(); processOfflineQueue(); });
+window.addEventListener('offline', () => { state.isOnline = false; updateStatusBar(); });
+
+function updateStatusBar() {
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  const badge = document.getElementById('offline-badge');
+  if (state.isOnline) {
+    dot.className = 'status-dot';
+    text.textContent = 'Connected — synced with Google';
+    badge.classList.remove('show');
+  } else {
+    dot.className = 'status-dot offline';
+    text.textContent = 'Offline — changes saved locally';
+    badge.classList.add('show');
+  }
+}
+
+// ============================================================
+// AUTH
+// ============================================================
+function signIn() {
+  const params = new URLSearchParams({
+    client_id: CONFIG.CLIENT_ID,
+    redirect_uri: window.location.origin + '/auth/callback',
+    response_type: 'token',
+    scope: CONFIG.SCOPES,
+    include_granted_scopes: 'true'
+  });
+  window.location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + params;
+}
+
+function checkAuth() {
+  // Check URL hash for token (implicit flow return)
+  const hash = window.location.hash;
+  if (hash) {
+    const params = new URLSearchParams(hash.substring(1));
+    const token = params.get('access_token');
+    if (token) {
+      state.accessToken = token;
+      localStorage.setItem('ct_token', token);
+      localStorage.setItem('ct_token_time', Date.now().toString());
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }
+
+  // Check stored token (valid for ~1 hour)
+  if (!state.accessToken) {
+    const stored = localStorage.getItem('ct_token');
+    const storedTime = localStorage.getItem('ct_token_time');
+    if (stored && storedTime && (Date.now() - parseInt(storedTime)) < 3500000) {
+      state.accessToken = stored;
+    }
+  }
+
+  if (state.accessToken) {
+    showApp();
+  } else {
+    document.getElementById('auth-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+}
+
+async function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  updateStatusBar();
+
+  // Get user info
+  try {
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: 'Bearer ' + state.accessToken }
+    });
+    const user = await res.json();
+    state.user = user;
+    document.getElementById('header-user').textContent = user.given_name || user.email;
+  } catch(e) {}
+
+  await loadData();
+}
+
+function signOut() {
+  localStorage.removeItem('ct_token');
+  localStorage.removeItem('ct_token_time');
+  state.accessToken = null;
+  location.reload();
+}
+
+// ============================================================
+// GOOGLE SHEETS API
+// ============================================================
+async function sheetsGet(range) {
+  if (!state.isOnline) return null;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}`;
+  const res = await fetch(url, { headers: { Authorization: 'Bearer ' + state.accessToken } });
+  if (!res.ok) throw new Error('Sheets API error: ' + res.status);
+  return res.json();
+}
+
+async function sheetsAppend(range, values) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + state.accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values })
+  });
+  if (!res.ok) throw new Error('Sheets append error: ' + res.status);
+  return res.json();
+}
+
+async function sheetsUpdate(range, values) {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const res = await fetch(url, {
+    method: 'PUT',
+    headers: { Authorization: 'Bearer ' + state.accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ values })
+  });
+  if (!res.ok) throw new Error('Sheets update error: ' + res.status);
+  return res.json();
+}
+
+// ============================================================
+// GOOGLE DRIVE API
+// ============================================================
+async function ensureRootFolder() {
+  if (state.rootFolderId) return state.rootFolderId;
+  const stored = localStorage.getItem('ct_root_folder');
+  if (stored) { state.rootFolderId = stored; return stored; }
+
+  // Search for existing folder
+  const search = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${CONFIG.DRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`, {
+    headers: { Authorization: 'Bearer ' + state.accessToken }
+  });
+  const sData = await search.json();
+  if (sData.files && sData.files.length > 0) {
+    state.rootFolderId = sData.files[0].id;
+    localStorage.setItem('ct_root_folder', state.rootFolderId);
+    return state.rootFolderId;
+  }
+
+  // Create folder
+  const create = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + state.accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: CONFIG.DRIVE_FOLDER_NAME, mimeType: 'application/vnd.google-apps.folder' })
+  });
+  const folder = await create.json();
+  state.rootFolderId = folder.id;
+  localStorage.setItem('ct_root_folder', folder.id);
+  return folder.id;
+}
+
+async function getOrCreateJobFolder(jobRef) {
+  const rootId = await ensureRootFolder();
+  const search = await fetch(`https://www.googleapis.com/drive/v3/files?q=name='${jobRef}' and mimeType='application/vnd.google-apps.folder' and '${rootId}' in parents and trashed=false`, {
+    headers: { Authorization: 'Bearer ' + state.accessToken }
+  });
+  const sData = await search.json();
+  if (sData.files && sData.files.length > 0) return sData.files[0].id;
+
+  const create = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + state.accessToken, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: jobRef, mimeType: 'application/vnd.google-apps.folder', parents: [rootId] })
+  });
+  const folder = await create.json();
+  return folder.id;
+}
+
+async function uploadPhoto(file, folderId, filename) {
+  const metadata = { name: filename, parents: [folderId] };
+  const form = new FormData();
+  form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+  form.append('file', file);
+  const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + state.accessToken },
+    body: form
+  });
+  return res.json();
+}
+
+// ============================================================
+// LOAD DATA
+// ============================================================
+async function loadData() {
+  try {
+    await loadJobs();
+    await loadDiary();
+    renderDashboard();
+  } catch(e) {
+    console.error('Load error:', e);
+    showToast('Using cached data', 'error');
+    renderDashboard();
+  }
+}
+
+async function loadJobs() {
+  const data = await sheetsGet('Jobs!A2:AH200');
+  if (!data || !data.values) { state.jobs = []; return; }
+  state.jobs = data.values.filter(r => r[0]).map((r, i) => ({
+    rowIndex: i + 2,
+    enquiryRef: r[0] || '',
+    jobRef: r[1] || '',
+    business: r[2] || '',
+    address: r[3] || '',
+    contact: r[4] || '',
+    mobile: r[5] || '',
+    screenSize: r[6] || '',
+    screenType: r[7] || '',
+    model: r[8] || '',
+    qty: r[9] || '',
+    orientation: r[10] || '',
+    doubleSided: r[11] || '',
+    mountType: r[12] || '',
+    poleConfig: r[13] || '',
+    poleLen: r[14] || '',
+    wallMaterial: r[15] || '',
+    suspCeiling: r[16] || '',
+    floorCeil: r[17] || '',
+    cableManagement: r[18] || '',
+    socketPresent: r[19] || '',
+    spurNeeded: r[20] || '',
+    elecNeeded: r[21] || '',
+    extLead: r[22] || '',
+    parking: r[23] || '',
+    installTime: r[24] || '',
+    xeroInv: r[25] || '',
+    paymentDate: r[26] || '',
+    orderDate: r[27] || '',
+    delivDate: r[28] || '',
+    delivConfirmed: r[29] || '',
+    installDate: r[30] || '',
+    serial: r[31] || '',
+    location: r[32] || '',
+    status: r[33] || '',
+    notes: r[34] || ''
+  }));
+  localStorage.setItem('ct_jobs', JSON.stringify(state.jobs));
+}
+
+async function loadEnquiries() {
+  const data = await sheetsGet('Enquiries!A2:Z200');
+  if (!data || !data.values) { state.enquiries = []; return; }
+  state.enquiries = data.values.filter(r => r[0]).map((r, i) => ({
+    rowIndex: i + 2,
+    ref: r[0] || '',
+    date: r[1] || '',
+    assigned: r[2] || '',
+    how: r[3] || '',
+    sector: r[4] || '',
+    name: r[5] || '',
+    business: r[6] || '',
+    email: r[7] || '',
+    phone: r[8] || '',
+    address: r[9] || '',
+    requirement: r[10] || '',
+    sites: r[11] || '',
+    screenSize: r[12] || '',
+    screenType: r[13] || '',
+    qty: r[14] || '',
+    message: r[15] || '',
+    status: r[16] || ''
+  }));
+}
+
+async function loadDiary() {
+  const stored = localStorage.getItem('ct_diary');
+  if (stored) state.diaryEntries = JSON.parse(stored);
+}
+
+// ============================================================
+// RENDER DASHBOARD
+// ============================================================
+function renderDashboard() {
+  // Jobs
+  const jobsEl = document.getElementById('dashboard-jobs');
+  const activeJobs = state.jobs.filter(j => j.jobRef);
+  if (activeJobs.length === 0) {
+    jobsEl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">No active jobs</div>';
+  } else {
+    jobsEl.innerHTML = activeJobs.slice(0, 5).map(j => jobCard(j)).join('');
+  }
+
+  // Diary
+  const diaryEl = document.getElementById('dashboard-diary');
+  const upcoming = state.diaryEntries.filter(d => new Date(d.date) >= new Date()).sort((a,b) => new Date(a.date) - new Date(b.date));
+  if (upcoming.length === 0) {
+    diaryEl.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">Nothing scheduled</div>';
+  } else {
+    diaryEl.innerHTML = upcoming.slice(0, 3).map(d => diaryCard(d)).join('');
+  }
+
+  // Populate job selects
+  renderJobList('jobs-list', state.jobs);
+  renderJobList('survey-job-list', state.jobs, 'survey');
+  renderJobList('install-job-list', state.jobs, 'install');
+  populateDiaryJobSelect();
+  renderDiaryList();
+}
+
+function jobCard(j) {
+  return `<div class="job-item" onclick="openJob('${j.jobRef}')">
+    <div class="job-ref">${j.jobRef}</div>
+    <div class="job-business">${j.business}</div>
+    <div class="job-address">${j.address}</div>
+    <div class="job-meta">
+      <span style="font-size:12px;color:var(--text-dim);">${j.screenSize} ${j.screenType}</span>
+      <span style="font-size:12px;color:var(--text-dim);">Qty: ${j.qty || '—'}</span>
+    </div>
+  </div>`;
+}
+
+function diaryCard(d) {
+  return `<div class="diary-entry">
+    <div class="diary-date">${formatDate(d.date)} ${d.time || ''}</div>
+    <div class="diary-type">${d.type}</div>
+    <div class="diary-job">${d.jobRef} — ${d.business}</div>
+    ${d.notes ? `<div style="font-size:12px;color:var(--text-dim);margin-top:4px;">${d.notes}</div>` : ''}
+  </div>`;
+}
+
+function renderJobList(containerId, jobs, mode) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (jobs.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">No jobs found</div>';
+    return;
+  }
+  el.innerHTML = jobs.map(j => `
+    <div class="job-item" onclick="${mode === 'survey' ? 'openSurveyForm' : mode === 'install' ? 'openInstallForm' : 'openJob'}('${j.jobRef}')">
+      <div class="job-ref">${j.jobRef}</div>
+      <div class="job-business">${j.business}</div>
+      <div class="job-address">${j.address}</div>
+    </div>`).join('');
+}
+
+function populateDiaryJobSelect() {
+  const sel = document.getElementById('diary-job');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Select job</option>' +
+    state.jobs.map(j => `<option value="${j.jobRef}|${j.business}">${j.jobRef} — ${j.business}</option>`).join('');
+}
+
+function renderDiaryList() {
+  const el = document.getElementById('diary-list');
+  if (!el) return;
+  if (state.diaryEntries.length === 0) {
+    el.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:12px 0;">No diary entries yet</div>';
+    return;
+  }
+  const sorted = [...state.diaryEntries].sort((a,b) => new Date(a.date) - new Date(b.date));
+  el.innerHTML = sorted.map(d => diaryCard(d)).join('');
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+  event.target.classList.add('active');
+  document.getElementById('header-title').textContent = {
+    dashboard: 'Dashboard', jobs: 'Jobs', survey: 'Survey',
+    install: 'Install', diary: 'Diary', enquiry: 'New Enquiry'
+  }[name];
+}
+
+function openJob(jobRef) {
+  const job = state.jobs.find(j => j.jobRef === jobRef);
+  if (!job) return;
+  state.currentJob = job;
+  showToast(job.business + ' — ' + job.address);
+}
+
+// ============================================================
+// SURVEY
+// ============================================================
+function showSurveyList() {
+  document.getElementById('survey-list-view').style.display = 'block';
+  document.getElementById('survey-form-view').style.display = 'none';
+  state.surveyPhotos = [];
+  document.getElementById('survey-photos').innerHTML = '';
+}
+
+function openSurveyForm(jobRef) {
+  const job = state.jobs.find(j => j.jobRef === jobRef);
+  if (!job) return;
+  state.currentJob = job;
+  document.getElementById('survey-job-ref').textContent = job.jobRef;
+  document.getElementById('survey-job-name').textContent = job.business;
+  document.getElementById('survey-job-address').textContent = job.address;
+  document.getElementById('s-contact').value = job.contact || '';
+  document.getElementById('s-mobile').value = job.mobile || '';
+  document.getElementById('s-size').value = job.screenSize || '';
+  document.getElementById('s-qty').value = job.qty || '';
+  document.getElementById('s-type').value = job.screenType || '';
+  document.getElementById('survey-list-view').style.display = 'none';
+  document.getElementById('survey-form-view').style.display = 'block';
+}
+
+async function saveSurvey() {
+  if (!state.currentJob) return;
+  const btn = document.querySelector('#screen-survey .btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  const data = {
+    contact: document.getElementById('s-contact').value,
+    mobile: document.getElementById('s-mobile').value,
+    size: document.getElementById('s-size').value,
+    qty: document.getElementById('s-qty').value,
+    type: document.getElementById('s-type').value,
+    orientation: state.selections['orientation'] || '',
+    doubleSided: state.selections['double-sided'] || '',
+    mount: state.selections['mount'] || '',
+    pole: state.selections['pole'] || '',
+    poleLen: document.getElementById('s-pole-len').value,
+    floorCeil: document.getElementById('s-floor-ceil').value,
+    wall: state.selections['wall'] || '',
+    suspCeiling: document.getElementById('toggle-susp').classList.contains('on') ? 'Yes' : 'No',
+    socket: document.getElementById('toggle-socket').classList.contains('on') ? 'Yes' : 'No',
+    spur: document.getElementById('toggle-spur').classList.contains('on') ? 'Yes' : 'No',
+    elec: document.getElementById('toggle-elec').classList.contains('on') ? 'Yes' : 'No',
+    ext: document.getElementById('toggle-ext').classList.contains('on') ? 'Yes' : 'No',
+    cable: state.selections['cable'] || '',
+    parking: document.getElementById('s-parking').value,
+    installTime: state.selections['install-time'] || '',
+    location: document.getElementById('s-location').value,
+    notes: document.getElementById('s-notes').value
+  };
+
+  if (state.isOnline) {
+    try {
+      // Update Jobs sheet row
+      const job = state.currentJob;
+      const range = `Jobs!E${job.rowIndex}:AI${job.rowIndex}`;
+      await sheetsUpdate(range, [[
+        data.contact, data.mobile, data.size, data.type, '', data.qty,
+        data.orientation, data.doubleSided, data.mount, data.pole, data.poleLen,
+        data.wall, data.suspCeiling, data.floorCeil, data.cable,
+        data.socket, data.spur, data.elec, data.ext, data.parking,
+        data.installTime, '', '', '', '', '', '', '', data.location, 'Surveyed', data.notes
+      ]]);
+
+      // Upload photos to Drive
+      if (state.surveyPhotos.length > 0) {
+        const folderId = await getOrCreateJobFolder(job.jobRef);
+        const surveyFolderRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + state.accessToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'Survey Photos', mimeType: 'application/vnd.google-apps.folder', parents: [folderId] })
+        });
+        const surveyFolder = await surveyFolderRes.json();
+        for (let i = 0; i < state.surveyPhotos.length; i++) {
+          await uploadPhoto(state.surveyPhotos[i].file, surveyFolder.id, `survey_${i+1}_${Date.now()}.jpg`);
+        }
+      }
+
+      showToast('Survey saved ✓', 'success');
+      await loadJobs();
+      showSurveyList();
+    } catch(e) {
+      queueOffline({ type: 'survey', jobRef: state.currentJob.jobRef, data });
+      showToast('Saved offline — will sync later');
+    }
+  } else {
+    queueOffline({ type: 'survey', jobRef: state.currentJob.jobRef, data });
+    showToast('Saved offline — will sync when connected');
+    showSurveyList();
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save Survey to Tracker';
+}
+
+// ============================================================
+// INSTALL
+// ============================================================
+function showInstallList() {
+  document.getElementById('install-list-view').style.display = 'block';
+  document.getElementById('install-form-view').style.display = 'none';
+  state.installPhotos = [];
+  document.getElementById('install-photos').innerHTML = '';
+}
+
+function openInstallForm(jobRef) {
+  const job = state.jobs.find(j => j.jobRef === jobRef);
+  if (!job) return;
+  state.currentJob = job;
+  document.getElementById('install-job-ref').textContent = job.jobRef;
+  document.getElementById('install-job-name').textContent = job.business;
+  document.getElementById('install-job-address').textContent = job.address;
+  document.getElementById('install-list-view').style.display = 'none';
+  document.getElementById('install-form-view').style.display = 'block';
+}
+
+async function saveInstall() {
+  if (!state.currentJob) return;
+  const btn = document.querySelector('#screen-install .btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+
+  const data = {
+    date: document.getElementById('i-date').value,
+    time: document.getElementById('i-time').value,
+    delivery: document.getElementById('i-delivery').classList.contains('on') ? 'Yes' : 'No',
+    screenOk: document.getElementById('i-screen-ok').classList.contains('on') ? 'Yes' : 'No',
+    serial: document.getElementById('i-serial').value,
+    location: document.getElementById('i-location').value,
+    complete: document.getElementById('i-complete').classList.contains('on') ? 'Yes' : 'No',
+    signoff: document.getElementById('i-signoff').classList.contains('on') ? 'Yes' : 'No',
+    notes: document.getElementById('i-notes').value
+  };
+
+  // Write to Install Checklist sheet
+  const job = state.currentJob;
+  const checklistRow = [
+    job.jobRef, job.business, job.address, job.contact, job.mobile,
+    data.date, data.time, job.parking || '', job.screenType || '', job.model || '',
+    job.qty || '', job.mountType || '', job.poleConfig || '', job.poleLen || '',
+    job.suspCeiling || '', job.wallMaterial || '', job.cableManagement || '',
+    data.delivery, '', '', job.location || '', data.serial,
+    data.delivery, data.screenOk, data.complete, data.signoff, data.notes
+  ];
+
+  if (state.isOnline) {
+    try {
+      await sheetsAppend('Install Checklist!A:AA', [checklistRow]);
+
+      // Also update Jobs row with serial and install date
+      await sheetsUpdate(`Jobs!AE${job.rowIndex}:AH${job.rowIndex}`, [[
+        data.date, data.serial, data.location, data.complete === 'Yes' ? 'Installed' : 'In Progress'
+      ]]);
+
+      // Upload install photos
+      if (state.installPhotos.length > 0) {
+        const folderId = await getOrCreateJobFolder(job.jobRef);
+        const installFolderRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+          method: 'POST',
+          headers: { Authorization: 'Bearer ' + state.accessToken, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: 'Installation Photos', mimeType: 'application/vnd.google-apps.folder', parents: [folderId] })
+        });
+        const installFolder = await installFolderRes.json();
+        for (let i = 0; i < state.installPhotos.length; i++) {
+          await uploadPhoto(state.installPhotos[i].file, installFolder.id, `install_${i+1}_${Date.now()}.jpg`);
+        }
+      }
+
+      showToast('Install checklist saved ✓', 'success');
+      await loadJobs();
+      showInstallList();
+    } catch(e) {
+      queueOffline({ type: 'install', jobRef: job.jobRef, data, checklistRow });
+      showToast('Saved offline — will sync later');
+    }
+  } else {
+    queueOffline({ type: 'install', jobRef: job.jobRef, data, checklistRow });
+    showToast('Saved offline — will sync when connected');
+    showInstallList();
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save Install Checklist';
+}
+
+// ============================================================
+// DIARY
+// ============================================================
+async function saveDiaryEntry() {
+  const jobVal = document.getElementById('diary-job').value;
+  const date = document.getElementById('diary-date').value;
+  if (!jobVal || !date) { showToast('Select a job and date'); return; }
+
+  const [jobRef, business] = jobVal.split('|');
+  const entry = {
+    id: Date.now().toString(),
+    jobRef, business,
+    type: state.selections['diary-type'] || 'Survey',
+    date,
+    time: document.getElementById('diary-time').value,
+    notes: document.getElementById('diary-notes').value
+  };
+
+  state.diaryEntries.push(entry);
+  localStorage.setItem('ct_diary', JSON.stringify(state.diaryEntries));
+
+  // Update tracker sheet with survey/install date
+  if (state.isOnline) {
+    try {
+      const job = state.jobs.find(j => j.jobRef === jobRef);
+      if (job) {
+        if (entry.type === 'Survey') {
+          await sheetsUpdate(`Enquiries!R${job.rowIndex}`, [[date]]);
+        } else {
+          await sheetsUpdate(`Jobs!AE${job.rowIndex}`, [[date]]);
+        }
+      }
+    } catch(e) {}
+  }
+
+  renderDiaryList();
+  renderDashboard();
+  showToast('Diary entry saved ✓', 'success');
+  document.getElementById('diary-date').value = '';
+  document.getElementById('diary-notes').value = '';
+}
+
+// ============================================================
+// NEW ENQUIRY
+// ============================================================
+async function saveEnquiry() {
+  const business = document.getElementById('e-business').value;
+  const name = (document.getElementById('e-fname').value + ' ' + document.getElementById('e-lname').value).trim();
+  if (!business || !name) { showToast('Name and business required'); return; }
+
+  const today = new Date().toLocaleDateString('en-GB');
+  const row = [
+    '', today, 'Steve',
+    state.selections['how'] || 'Website',
+    document.getElementById('e-sector').value,
+    name,
+    business,
+    document.getElementById('e-email').value,
+    document.getElementById('e-phone').value,
+    document.getElementById('e-address').value,
+    state.selections['req'] || 'Supply & Install',
+    document.getElementById('e-sites').value,
+    document.getElementById('e-screen').value,
+    '',
+    document.getElementById('e-qty').value,
+    document.getElementById('e-message').value,
+    'New'
+  ];
+
+  if (state.isOnline) {
+    try {
+      await sheetsAppend('Enquiries!A:Q', [row]);
+      showToast('Enquiry added ✓', 'success');
+      clearEnquiryForm();
+      await loadEnquiries();
+    } catch(e) {
+      queueOffline({ type: 'enquiry', row });
+      showToast('Saved offline — will sync later');
+      clearEnquiryForm();
+    }
+  } else {
+    queueOffline({ type: 'enquiry', row });
+    showToast('Saved offline — will sync when connected');
+    clearEnquiryForm();
+  }
+}
+
+function clearEnquiryForm() {
+  ['e-fname','e-lname','e-business','e-email','e-phone','e-address','e-sites','e-qty','e-screen','e-message'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('e-sector').value = '';
+}
+
+// ============================================================
+// PHOTOS
+// ============================================================
+function addPhotos(type, input) {
+  const files = Array.from(input.files);
+  const container = document.getElementById(type + '-photos');
+  const photoArray = type === 'survey' ? state.surveyPhotos : state.installPhotos;
+
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const id = Date.now() + Math.random();
+      photoArray.push({ id, file, dataUrl: e.target.result });
+      const div = document.createElement('div');
+      div.className = 'photo-thumb';
+      div.id = 'photo-' + id;
+      div.innerHTML = `<img src="${e.target.result}"><button class="del-btn" onclick="removePhoto('${type}','${id}')">×</button>`;
+      container.appendChild(div);
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
+}
+
+function removePhoto(type, id) {
+  const arr = type === 'survey' ? state.surveyPhotos : state.installPhotos;
+  const idx = arr.findIndex(p => p.id == id);
+  if (idx > -1) arr.splice(idx, 1);
+  const el = document.getElementById('photo-' + id);
+  if (el) el.remove();
+}
+
+// ============================================================
+// UI HELPERS
+// ============================================================
+function toggleSelect(btn, group) {
+  document.querySelectorAll(`[onclick*="'${group}'"]`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.selections[group] = btn.textContent.trim();
+
+  // Show/hide pole config
+  if (group === 'mount') {
+    document.getElementById('pole-config-group').style.display =
+      btn.textContent.trim() === 'Pole' ? 'block' : 'none';
+  }
+}
+
+function toggleSwitch(id) {
+  document.getElementById(id).classList.toggle('on');
+}
+
+function showToast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show' + (type ? ' ' + type : '');
+  setTimeout(() => { el.className = ''; }, 3000);
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+// ============================================================
+// OFFLINE QUEUE
+// ============================================================
+function queueOffline(item) {
+  state.offlineQueue.push(item);
+  localStorage.setItem('ct_offline_queue', JSON.stringify(state.offlineQueue));
+}
+
+async function processOfflineQueue() {
+  if (state.offlineQueue.length === 0 || !state.isOnline) return;
+  const queue = [...state.offlineQueue];
+  state.offlineQueue = [];
+  localStorage.setItem('ct_offline_queue', '[]');
+
+  for (const item of queue) {
+    try {
+      if (item.type === 'enquiry') {
+        await sheetsAppend('Enquiries!A:Q', [item.row]);
+      } else if (item.type === 'survey') {
+        // Re-find job row and update
+      } else if (item.type === 'install') {
+        await sheetsAppend('Install Checklist!A:AA', [item.checklistRow]);
+      }
+    } catch(e) {
+      state.offlineQueue.push(item);
+    }
+  }
+  if (state.offlineQueue.length > 0) {
+    localStorage.setItem('ct_offline_queue', JSON.stringify(state.offlineQueue));
+  } else {
+    showToast('All changes synced ✓', 'success');
+  }
+}
+
+// ============================================================
+// SERVICE WORKER (offline support)
+// ============================================================
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('load', checkAuth);
+</script>
+</body>
+</html>
