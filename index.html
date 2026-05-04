@@ -924,6 +924,7 @@ function initPlaces(){
   const ac=new google.maps.places.Autocomplete(input,{
     componentRestrictions:{country:'gb'},
     fields:['formatted_address','name','geometry'],
+    types:['establishment','geocode']
   });
   ac.addListener('place_changed',async()=>{
     const place=ac.getPlace();
