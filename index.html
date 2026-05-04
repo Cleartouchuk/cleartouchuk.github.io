@@ -408,10 +408,10 @@ input[type="date"],input[type="time"]{color-scheme:dark}
           <div class="field-group"><label class="field-label">No. Sites</label><input class="field-input" id="e-sites" type="number" value="1" min="1"></div>
           <div class="field-group"><label class="field-label">No. Screens</label><input class="field-input" id="e-qty" type="number" value="1" min="1"></div>
         </div>
-        <div class="field-group autocomplete-wrap">
-          <label class="field-label">Screen Type</label>
-          <input class="field-input" id="e-screen" type="text" placeholder="Type to search SKU or name..." oninput="searchProducts(this.value,'e-screen-list')" autocomplete="off">
-          <div class="autocomplete-list" id="e-screen-list"></div>
+        <div class="field-group">
+          <label class="field-label">Screen Types (add one per qty)</label>
+          <div id="e-screen-lines"></div>
+          <button class="btn-secondary" onclick="addScreenLine()" style="margin-top:4px;padding:8px">+ Add Screen Type</button>
         </div>
         <div class="field-group" style="margin-bottom:0"><label class="field-label">Message / Requirements</label><textarea class="field-textarea" id="e-message" placeholder="What they told you..."></textarea></div>
         <button class="btn-primary" onclick="saveEnquiry()">Add to Enquiries</button>
@@ -965,18 +965,31 @@ async function calcDistanceToJob(destination){
     }
   }catch(e){console.log('Distance calc failed:',e)}
 }
+function addScreenLine(){
+  const container=document.getElementById('e-screen-lines');
+  const idx=container.children.length;
+  const div=document.createElement('div');
+  div.style.cssText='display:flex;gap:6px;margin-bottom:6px;position:relative';
+  div.innerHTML=`<input class="field-input autocomplete-trigger" type="text" placeholder="Type SKU or name..." id="e-screen-${idx}" oninput="searchProducts(this.value,'e-sl-${idx}')" autocomplete="off" style="flex:1"><button onclick="this.parentElement.remove()" style="background:none;border:1px solid var(--grey-light);border-radius:var(--radius);color:var(--text-dim);padding:0 10px;cursor:pointer">×</button><div class="autocomplete-list" id="e-sl-${idx}" style="top:44px"></div>`;
+  container.appendChild(div);
+}
+function getScreenTypes(){
+  const inputs=document.querySelectorAll('[id^="e-screen-"]');
+  return Array.from(inputs).map(i=>i.value).filter(Boolean).join(', ');
+}
 async function saveEnquiry(){
   const biz=gv('e-business');const name=(gv('e-fname')+' '+gv('e-lname')).trim();if(!biz||!name){showToast('Name and business required');return}
-  const row=[new Date().toLocaleDateString('en-GB'),'Steve',state.sel['how']||'Website',gv('e-sector'),name,biz,gv('e-email'),gv('e-phone'),gv('e-address'),state.sel['req']||'Supply & Install',gv('e-sites'),gv('e-screen'),'',gv('e-qty'),gv('e-message'),'New'];
+  const row=[new Date().toLocaleDateString('en-GB'),'Steve',state.sel['how']||'Website',gv('e-sector'),name,biz,gv('e-email'),gv('e-phone'),gv('e-address'),state.sel['req']||'Supply & Install',gv('e-sites'),getScreenTypes(),'',gv('e-qty'),gv('e-message'),'New'];
   if(state.isOnline&&state.accessToken){
     try{
-      // Find first empty row in column B (date column)
-      const check=await sheetsGet('Enquiries!B2:B200');
+      // Find first row where A has a CT ref but B (date) is empty
+      const check=await sheetsGet('Enquiries!A2:B200');
       const vals=check.values||[];
       let targetRow=2;
       for(let i=0;i<vals.length;i++){
-        if(!vals[i]||!vals[i][0]){targetRow=i+2;break;}
-        if(i===vals.length-1)targetRow=i+3;
+        const aVal=vals[i]?vals[i][0]||'':'';
+        const bVal=vals[i]?vals[i][1]||'':'';
+        if(aVal.startsWith('CT-')&&!bVal){targetRow=i+2;break;}
       }
       await sheetsUpdate('Enquiries!B'+targetRow+':Q'+targetRow,[row]);
       showToast('Enquiry saved ✓','success');
@@ -992,7 +1005,7 @@ async function saveEnquiry(){
     clearEnqForm();
   }
 }
-function clearEnqForm(){['e-fname','e-lname','e-business','e-email','e-phone','e-address','e-sites','e-qty','e-screen','e-message'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});document.getElementById('e-sector').value=''}
+function clearEnqForm(){const sc=document.getElementById('e-screen-lines');if(sc){sc.innerHTML='';addScreenLine();}['e-fname','e-lname','e-business','e-email','e-phone','e-address','e-sites','e-qty','e-message'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});document.getElementById('e-sector').value=''}
 
 // INSTALL COST CALCULATOR
 function calcInstall(){
@@ -1074,7 +1087,7 @@ setInterval(()=>{
     if(age>=3000000){localStorage.removeItem('ct_token');localStorage.removeItem('ct_token_time');showToast('Session expired — tap to sign in again');setTimeout(()=>location.reload(),3000);}
   }
 },60000);
-window.addEventListener('load',checkAuth);
+window.addEventListener('load',()=>{checkAuth();addScreenLine();});
 </script>
 </body>
 </html>
