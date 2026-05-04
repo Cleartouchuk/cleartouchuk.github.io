@@ -302,7 +302,7 @@ input[type="date"],input[type="time"]{color-scheme:dark}
         </div>
         <div class="field-row">
           <div class="field-group"><label class="field-label">Number of Screens</label><input class="field-input" id="q-num-screens" type="number" value="1" min="1" oninput="calcInstall()"></div>
-          <div class="field-group"><label class="field-label">Distance from BH10 (miles)</label><input class="field-input" id="q-miles" type="number" value="0" min="0" oninput="calcInstall()"></div>
+          <div class="field-group"><label class="field-label">Distance from BH10 (miles)</label><input class="field-input" id="q-miles" type="number" value="0" min="0" oninput="calcInstall()" placeholder="Auto-fills from address"></div>
         </div>
         <div class="field-group"><label class="field-label">Survey Included?</label>
           <div class="toggle-group">
@@ -531,7 +531,7 @@ const PRODUCTS=[
 ];
 
 // STATE
-let state={accessToken:null,isOnline:navigator.onLine,jobs:[],diaryEntries:JSON.parse(localStorage.getItem('ct_diary')||'[]'),currentJob:null,sel:{},quoteLines:[],installPhotos:[],sitePhotos:{},numSites:1,currentSite:0,rootFolderId:null,offlineQueue:JSON.parse(localStorage.getItem('ct_offline_queue')||'[]')};
+let state={accessToken:null,isOnline:navigator.onLine,jobs:[],diaryEntries:JSON.parse(localStorage.getItem('ct_diary')||'[]'),currentJob:null,sel:{},quoteLines:[],installPhotos:[],sitePhotos:{},numSites:1,currentSite:0,rootFolderId:null,lastJobMiles:0,offlineQueue:JSON.parse(localStorage.getItem('ct_offline_queue')||'[]')};
 
 // ONLINE/OFFLINE
 window.addEventListener('online',()=>{state.isOnline=true;updateStatus();processOffline()});
@@ -916,21 +916,53 @@ async function saveDiaryEntry(){
 }
 
 // ENQUIRY
+const ORIGIN_POSTCODE='BH10 3DH';
+
 function initPlaces(){
   const input=document.getElementById('e-address');
   if(!input||typeof google==='undefined')return;
   const ac=new google.maps.places.Autocomplete(input,{
     componentRestrictions:{country:'gb'},
-    fields:['formatted_address'],
-    types:['address']
+    fields:['formatted_address','name','geometry'],
   });
-  ac.addListener('place_changed',()=>{
+  ac.addListener('place_changed',async()=>{
     const place=ac.getPlace();
     if(place&&place.formatted_address){
       input.value=place.formatted_address;
       showToast('Address selected ✓','success');
+      // Auto-calculate distance for quote
+      await calcDistanceToJob(place.formatted_address);
     }
   });
+}
+
+async function calcDistanceToJob(destination){
+  try{
+    const res=await fetch('https://routes.googleapis.com/directions/v2:computeRoutes',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Goog-Api-Key':'AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY',
+        'X-Goog-FieldMask':'routes.distanceMeters,routes.duration'
+      },
+      body:JSON.stringify({
+        origin:{address:ORIGIN_POSTCODE},
+        destination:{address:destination},
+        travelMode:'DRIVE',
+        routingPreference:'TRAFFIC_UNAWARE'
+      })
+    });
+    const d=await res.json();
+    if(d.routes&&d.routes.length>0){
+      const metres=d.routes[0].distanceMeters;
+      const miles=Math.round(metres/1609.34);
+      state.lastJobMiles=miles;
+      // Update quote miles field
+      const milesEl=document.getElementById('q-miles');
+      if(milesEl){milesEl.value=miles;calcInstall();}
+      showToast('Distance: '+miles+' miles from BH10','success');
+    }
+  }catch(e){console.log('Distance calc failed:',e)}
 }
 async function saveEnquiry(){
   const biz=gv('e-business');const name=(gv('e-fname')+' '+gv('e-lname')).trim();if(!biz||!name){showToast('Name and business required');return}
