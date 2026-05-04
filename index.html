@@ -588,7 +588,7 @@ async function loadData(){
   try{
     const d=await sheetsGet('Jobs!A2:AH200');
     if(d&&d.values){
-      state.jobs=d.values.filter(r=>r[0]).map((r,i)=>({rowIndex:i+2,enquiryRef:r[0]||'',jobRef:r[1]||'',business:r[2]||'',address:r[3]||'',contact:r[4]||'',mobile:r[5]||'',screenSize:r[6]||'',screenType:r[7]||'',qty:r[9]||'',status:r[33]||''}));
+      state.jobs=d.values.filter(r=>r[0]&&r[1]&&r[1]!=='JOB REF (AUTO)'&&r[0]!=='ENQUIRY REF').map((r,i)=>({rowIndex:i+2,enquiryRef:r[0]||'',jobRef:r[1]||'',business:r[2]||'',address:r[3]||'',contact:r[4]||'',mobile:r[5]||'',screenSize:r[6]||'',screenType:r[7]||'',qty:r[9]||'',status:r[33]||''}));
       localStorage.setItem('ct_jobs',JSON.stringify(state.jobs))
     }
   }catch(e){const s=localStorage.getItem('ct_jobs');if(s)state.jobs=JSON.parse(s);showToast('Using cached data')}
@@ -968,8 +968,21 @@ async function calcDistanceToJob(destination){
 async function saveEnquiry(){
   const biz=gv('e-business');const name=(gv('e-fname')+' '+gv('e-lname')).trim();if(!biz||!name){showToast('Name and business required');return}
   const row=['',new Date().toLocaleDateString('en-GB'),'Steve',state.sel['how']||'Website',gv('e-sector'),name,biz,gv('e-email'),gv('e-phone'),gv('e-address'),state.sel['req']||'Supply & Install',gv('e-sites'),gv('e-screen'),'',gv('e-qty'),gv('e-message'),'New'];
-  if(state.isOnline){try{await sheetsAppend('Enquiries!A:Q',[row]);showToast('Enquiry added ✓','success');clearEnqForm()}catch(e){state.offlineQueue.push({type:'enquiry',row});localStorage.setItem('ct_offline_queue',JSON.stringify(state.offlineQueue));showToast('Saved offline');clearEnqForm()}}
-  else{state.offlineQueue.push({type:'enquiry',row});localStorage.setItem('ct_offline_queue',JSON.stringify(state.offlineQueue));showToast('Saved offline');clearEnqForm()}
+  if(state.isOnline&&state.accessToken){
+    try{
+      await sheetsAppend('Enquiries!A:Q',[row]);
+      showToast('Enquiry added ✓','success');
+      clearEnqForm();
+    }catch(e){
+      console.error('Save error:',e);
+      showToast('Error: '+e.message);
+    }
+  }else{
+    state.offlineQueue.push({type:'enquiry',row});
+    localStorage.setItem('ct_offline_queue',JSON.stringify(state.offlineQueue));
+    showToast('Saved offline — will sync when signed in');
+    clearEnqForm();
+  }
 }
 function clearEnqForm(){['e-fname','e-lname','e-business','e-email','e-phone','e-address','e-sites','e-qty','e-screen','e-message'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});document.getElementById('e-sector').value=''}
 
