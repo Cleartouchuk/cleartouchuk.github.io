@@ -970,8 +970,16 @@ async function saveEnquiry(){
   const row=[new Date().toLocaleDateString('en-GB'),'Steve',state.sel['how']||'Website',gv('e-sector'),name,biz,gv('e-email'),gv('e-phone'),gv('e-address'),state.sel['req']||'Supply & Install',gv('e-sites'),gv('e-screen'),'',gv('e-qty'),gv('e-message'),'New'];
   if(state.isOnline&&state.accessToken){
     try{
-      await sheetsAppend('Enquiries!B:Q',[row]);
-      showToast('Enquiry added ✓','success');
+      // Find first empty row in column B (date column)
+      const check=await sheetsGet('Enquiries!B2:B200');
+      const vals=check.values||[];
+      let targetRow=2;
+      for(let i=0;i<vals.length;i++){
+        if(!vals[i]||!vals[i][0]){targetRow=i+2;break;}
+        if(i===vals.length-1)targetRow=i+3;
+      }
+      await sheetsUpdate('Enquiries!B'+targetRow+':Q'+targetRow,[row]);
+      showToast('Enquiry saved ✓','success');
       clearEnqForm();
     }catch(e){
       console.error('Save error:',e);
