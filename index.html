@@ -920,14 +920,12 @@ async function saveDiaryEntry(){
 async function lookupPostcode(){
   const pc=gv('e-postcode').trim();if(!pc){showToast('Enter a postcode');return}
   try{
-    const r=await fetch('https://api.postcodes.io/postcodes/'+pc.replace(/\s/g,''));
+    const r=await fetch('https://maps.googleapis.com/maps/api/geocode/json?address='+encodeURIComponent(pc)+'&region=uk&key=AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY');
     const d=await r.json();
-    if(d.status===200&&d.result){
-      const res=d.result;
-      const town=res.post_town||res.admin_district||'';
-      document.getElementById('e-address').value=town?town+', '+pc.toUpperCase():pc.toUpperCase();
-      showToast('Town filled — add street number','success')
-    }else showToast('Postcode not found')
+    if(d.status==='OK'&&d.results.length>0){
+      document.getElementById('e-address').value=d.results[0].formatted_address;
+      showToast('Address found ✓','success')
+    }else showToast('Postcode not found — check and retry')
   }catch(e){showToast('Lookup failed')}
 }
 async function saveEnquiry(){
