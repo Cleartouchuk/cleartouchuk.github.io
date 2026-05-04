@@ -111,6 +111,7 @@ input[type="date"],input[type="time"]{color-scheme:dark}
 .postcode-btn{padding:11px 14px;background:var(--grey-mid);border:1px solid var(--grey-light);border-radius:var(--radius);color:var(--text-mid);font-size:13px;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;flex-shrink:0}
 .postcode-btn:active{border-color:var(--gold);color:var(--gold)}
 </style>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY&libraries=places&language=en&region=GB" async defer onload="initPlaces()"></script>
 </head>
 <body>
 
@@ -391,13 +392,9 @@ input[type="date"],input[type="time"]{color-scheme:dark}
         <div class="field-group"><label class="field-label">Email</label><input class="field-input" id="e-email" type="email"></div>
         <div class="field-group"><label class="field-label">Phone</label><input class="field-input" id="e-phone" type="tel"></div>
         <div class="field-group">
-          <label class="field-label">Postcode Lookup</label>
-          <div class="postcode-row">
-            <input class="field-input" id="e-postcode" type="text" placeholder="BH13 6BG">
-            <button class="postcode-btn" onclick="lookupPostcode()">Look Up</button>
-          </div>
+          <label class="field-label">Address Search</label>
+          <input class="field-input" id="e-address" type="text" placeholder="Start typing postcode or address..." autocomplete="off">
         </div>
-        <div class="field-group"><label class="field-label">Address</label><input class="field-input" id="e-address" type="text" placeholder="Will auto-fill from postcode"></div>
         <div class="field-group"><label class="field-label">Requirement</label>
           <div class="toggle-group">
             <button class="toggle-btn" onclick="toggleSelect(this,'req')">Supply Only</button>
@@ -917,20 +914,21 @@ async function saveDiaryEntry(){
 }
 
 // ENQUIRY
-async function lookupPostcode(){
-  const pc=gv('e-postcode').trim();if(!pc){showToast('Enter a postcode');return}
-  try{
-    const url='https://maps.googleapis.com/maps/api/geocode/json?address='+encodeURIComponent(pc+', UK')+'&key=AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY&language=en&components=country:GB';
-    const r=await fetch(url);
-    const d=await r.json();
-    console.log('Geocode status:',d.status,'results:',d.results?d.results.length:0);
-    if(d.status==='OK'&&d.results&&d.results.length>0){
-      document.getElementById('e-address').value=d.results[0].formatted_address;
-      showToast('Address found ✓','success')
-    }else{
-      showToast('Status: '+d.status)
+function initPlaces(){
+  const input=document.getElementById('e-address');
+  if(!input||!window.google)return;
+  const ac=new google.maps.places.Autocomplete(input,{
+    componentRestrictions:{country:'gb'},
+    fields:['formatted_address'],
+    types:['address']
+  });
+  ac.addListener('place_changed',()=>{
+    const place=ac.getPlace();
+    if(place.formatted_address){
+      input.value=place.formatted_address;
+      showToast('Address selected ✓','success')
     }
-  }catch(e){showToast('Lookup failed: '+e.message)}
+  });
 }
 async function saveEnquiry(){
   const biz=gv('e-business');const name=(gv('e-fname')+' '+gv('e-lname')).trim();if(!biz||!name){showToast('Name and business required');return}
@@ -938,7 +936,7 @@ async function saveEnquiry(){
   if(state.isOnline){try{await sheetsAppend('Enquiries!A:Q',[row]);showToast('Enquiry added ✓','success');clearEnqForm()}catch(e){state.offlineQueue.push({type:'enquiry',row});localStorage.setItem('ct_offline_queue',JSON.stringify(state.offlineQueue));showToast('Saved offline');clearEnqForm()}}
   else{state.offlineQueue.push({type:'enquiry',row});localStorage.setItem('ct_offline_queue',JSON.stringify(state.offlineQueue));showToast('Saved offline');clearEnqForm()}
 }
-function clearEnqForm(){['e-fname','e-lname','e-business','e-email','e-phone','e-postcode','e-address','e-sites','e-qty','e-screen','e-message'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});document.getElementById('e-sector').value=''}
+function clearEnqForm(){['e-fname','e-lname','e-business','e-email','e-phone','e-address','e-sites','e-qty','e-screen','e-message'].forEach(id=>{const e=document.getElementById(id);if(e)e.value=''});document.getElementById('e-sector').value=''}
 
 // INSTALL COST CALCULATOR
 function calcInstall(){
