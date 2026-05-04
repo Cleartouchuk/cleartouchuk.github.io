@@ -920,6 +920,7 @@ function initPlaces(){
   const ac=new google.maps.places.Autocomplete(input,{
     componentRestrictions:{country:'gb'},
     fields:['formatted_address'],
+    types:['address']
   });
   ac.addListener('place_changed',()=>{
     const place=ac.getPlace();
