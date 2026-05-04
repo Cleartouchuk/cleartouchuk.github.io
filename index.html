@@ -920,13 +920,17 @@ async function saveDiaryEntry(){
 async function lookupPostcode(){
   const pc=gv('e-postcode').trim();if(!pc){showToast('Enter a postcode');return}
   try{
-    const r=await fetch('https://maps.googleapis.com/maps/api/geocode/json?address='+encodeURIComponent(pc)+'&region=uk&key=AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY');
+    const url='https://maps.googleapis.com/maps/api/geocode/json?address='+encodeURIComponent(pc+', UK')+'&key=AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY&language=en&components=country:GB';
+    const r=await fetch(url);
     const d=await r.json();
-    if(d.status==='OK'&&d.results.length>0){
+    console.log('Geocode status:',d.status,'results:',d.results?d.results.length:0);
+    if(d.status==='OK'&&d.results&&d.results.length>0){
       document.getElementById('e-address').value=d.results[0].formatted_address;
       showToast('Address found ✓','success')
-    }else showToast('Postcode not found — check and retry')
-  }catch(e){showToast('Lookup failed')}
+    }else{
+      showToast('Status: '+d.status)
+    }
+  }catch(e){showToast('Lookup failed: '+e.message)}
 }
 async function saveEnquiry(){
   const biz=gv('e-business');const name=(gv('e-fname')+' '+gv('e-lname')).trim();if(!biz||!name){showToast('Name and business required');return}
