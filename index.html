@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- v3 --><html lang="en">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -540,7 +540,7 @@ window.addEventListener('offline',()=>{state.isOnline=false;updateStatus()});
 function updateStatus(){const d=document.getElementById('status-dot'),t=document.getElementById('status-text');if(state.isOnline){d.className='status-dot';t.textContent='Connected — synced with Google'}else{d.className='status-dot offline';t.textContent='Offline — will sync when connected'}}
 
 // AUTH
-function signIn(){const p=new URLSearchParams({client_id:CONFIG.CLIENT_ID,redirect_uri:window.location.origin+'/auth/callback',response_type:'token',scope:CONFIG.SCOPES,include_granted_scopes:'true'});window.location.href='https://accounts.google.com/o/oauth2/v2/auth?'+p}
+function signIn(){const p=new URLSearchParams({client_id:CONFIG.CLIENT_ID,redirect_uri:window.location.origin+'/auth/callback',response_type:'token',scope:CONFIG.SCOPES,include_granted_scopes:'true',prompt:'select_account'});window.location.href='https://accounts.google.com/o/oauth2/v2/auth?'+p}
 function checkAuth(){
   const hash=window.location.hash;
   if(hash){const p=new URLSearchParams(hash.substring(1));const t=p.get('access_token');if(t){state.accessToken=t;localStorage.setItem('ct_token',t);localStorage.setItem('ct_token_time',Date.now().toString());window.history.replaceState({},document.title,window.location.pathname)}}
@@ -920,12 +920,13 @@ async function saveDiaryEntry(){
 async function lookupPostcode(){
   const pc=gv('e-postcode').trim();if(!pc){showToast('Enter a postcode');return}
   try{
-    const r=await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(pc)}&region=uk&key=AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY`);
+    const r=await fetch('https://api.postcodes.io/postcodes/'+pc.replace(/\s/g,''));
     const d=await r.json();
-    if(d.status==='OK'&&d.results.length>0){
-      const addr=d.results[0].formatted_address;
-      document.getElementById('e-address').value=addr;
-      showToast('Address found ✓','success')
+    if(d.status===200&&d.result){
+      const res=d.result;
+      const town=res.post_town||res.admin_district||'';
+      document.getElementById('e-address').value=town?town+', '+pc.toUpperCase():pc.toUpperCase();
+      showToast('Town filled — add street number','success')
     }else showToast('Postcode not found')
   }catch(e){showToast('Lookup failed')}
 }
