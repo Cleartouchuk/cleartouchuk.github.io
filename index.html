@@ -112,6 +112,7 @@ input[type="date"],input[type="time"]{color-scheme:dark}
 .postcode-btn:active{border-color:var(--gold);color:var(--gold)}
 </style>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAWXUJt789HZBaNqyqROpr3WHIhPPKR2UY&libraries=places&language=en&region=GB&callback=initPlaces" async defer></script>
+
 </head>
 <body>
 
@@ -392,8 +393,9 @@ input[type="date"],input[type="time"]{color-scheme:dark}
         <div class="field-group"><label class="field-label">Email</label><input class="field-input" id="e-email" type="email"></div>
         <div class="field-group"><label class="field-label">Phone</label><input class="field-input" id="e-phone" type="tel"></div>
         <div class="field-group">
-          <label class="field-label">Address Search</label>
-          <input class="field-input" id="e-address" type="text" placeholder="Start typing postcode or address..." autocomplete="off">
+          <label class="field-label">Address (type street, postcode or business name)</label>
+          <input class="field-input" id="e-address" type="text" placeholder="e.g. Haven Road or BH13..." autocomplete="off">
+          <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Start typing — select from the dropdown that appears</div>
         </div>
         <div class="field-group"><label class="field-label">Requirement</label>
           <div class="toggle-group">
@@ -916,17 +918,17 @@ async function saveDiaryEntry(){
 // ENQUIRY
 function initPlaces(){
   const input=document.getElementById('e-address');
-  if(!input||!window.google)return;
+  if(!input||typeof google==='undefined')return;
   const ac=new google.maps.places.Autocomplete(input,{
     componentRestrictions:{country:'gb'},
     fields:['formatted_address'],
-    types:['address']
+    types:['geocode']
   });
   ac.addListener('place_changed',()=>{
     const place=ac.getPlace();
-    if(place.formatted_address){
+    if(place&&place.formatted_address){
       input.value=place.formatted_address;
-      showToast('Address selected ✓','success')
+      showToast('Address selected ✓','success');
     }
   });
 }
