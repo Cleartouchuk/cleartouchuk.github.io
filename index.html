@@ -590,9 +590,9 @@ async function uploadFile(file,folderId,name){
 // LOAD DATA
 async function loadData(){
   try{
-    const d=await sheetsGet('Jobs!A2:AM200');
+    const d=await sheetsGet('Jobs!A3:AM200');
     if(d&&d.values){
-      state.jobs=d.values.filter(r=>r[0]&&r[1]&&r[1]!=='JOB REF (AUTO)'&&r[0]!=='ENQUIRY REF').map((r,i)=>({rowIndex:i+2,enquiryRef:r[0]||'',jobRef:r[1]||'',business:r[2]||'',address:r[3]||'',contact:r[4]||'',mobile:r[5]||'',screenSize:r[6]||'',screenType:r[7]||'',qty:r[9]||'',status:r[33]||''}));
+      state.jobs=d.values.filter(r=>r[0]&&r[1]).map((r,i)=>({rowIndex:i+3,enquiryRef:r[0]||'',jobRef:r[1]||'',business:r[2]||'',address:r[3]||'',contact:r[4]||'',mobile:r[5]||'',screenSize:r[6]||'',screenType:r[7]||'',qty:r[9]||'',status:r[37]||''}));
       localStorage.setItem('ct_jobs',JSON.stringify(state.jobs))
     }
   }catch(e){const s=localStorage.getItem('ct_jobs');if(s)state.jobs=JSON.parse(s);showToast('Using cached data')}
